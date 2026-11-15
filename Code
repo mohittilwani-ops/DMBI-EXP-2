@@ -1,0 +1,56 @@
+    columns=["RowNumber", "CustomerId", "Surname"],
+    errors="ignore"
+)
+
+# Check that the target column exists
+if "Exited" not in df.columns:
+    raise ValueError("The dataset must contain the target column 'Exited'.")
+
+# ------------------------------------------------------------
+# 7. Separate features and target
+# ------------------------------------------------------------
+X = df.drop(columns=["Exited"])
+y = df["Exited"]
+
+# ------------------------------------------------------------
+# 8. Encode categorical columns using One-Hot Encoding
+# ------------------------------------------------------------
+categorical_features = [
+    column for column in ["Geography", "Gender"] if column in X.columns
+]
+
+if categorical_features:
+    X = pd.get_dummies(
+        X,
+        columns=categorical_features,
+        drop_first=True,
+        dtype=int
+    )
+
+# ------------------------------------------------------------
+# 9. Scale numerical features using StandardScaler
+# ------------------------------------------------------------
+numerical_features = X.select_dtypes(include=np.number).columns
+
+scaler = StandardScaler()
+X[numerical_features] = scaler.fit_transform(X[numerical_features])
+
+# ------------------------------------------------------------
+# 10. Create the final preprocessed dataset
+# ------------------------------------------------------------
+final_df = X.copy()
+final_df["Exited"] = y.values
+
+print("\nFinal Preprocessed Dataset (first 5 records):")
+print(final_df.head())
+
+# ------------------------------------------------------------
+# 11. Verify and save the final dataset
+# ------------------------------------------------------------
+print("\nFinal Dataset Shape:", final_df.shape)
+print("Total Missing Values:", final_df.isnull().sum().sum())
+print("Duplicate Records:", final_df.duplicated().sum())
+
+final_df.to_csv("bank_customer_churn_preprocessed.csv", index=False)
+print("\nPreprocessed dataset saved as:")
+print("bank_customer_churn_preprocessed.csv")
